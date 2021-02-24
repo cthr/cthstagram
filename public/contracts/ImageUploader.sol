@@ -12,7 +12,7 @@ contract ImageUpload {
 
     mapping(uint256 => Image) public images;
     
-    function create(string memory name) public payable {
+    function create(string memory name, uint32 size) public payable {
         // Set cost to upload
         require(msg.value >= 0.01 ether);
         
@@ -20,6 +20,7 @@ contract ImageUpload {
         Image memory image;
         image.name = name;
         image.uploader = msg.sender;
+        image.data = new string[](size);
         
         // Map the imageID to the image
         images[uploadID] = image;

@@ -4,8 +4,8 @@
 	import { ethStore, web3, selectedAccount, connected } from 'svelte-web3';
 	import { onMount } from 'svelte';
 
-	const contractAddress = "0xc3E5180a32402583BC73B8669E8d1bB2654B965d";
-	const contractABI = [{"inputs":[{"internalType":"string","name":"name","type":"string"}],"name":"create","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"string","name":"data","type":"string"}],"name":"uploadChunk","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageChunks","outputs":[{"internalType":"string[]","name":"","type":"string[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageName","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageUploader","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"images","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"uploader","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"uploadID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+	const contractAddress = "0x1c8cEdeA1C81EbC26f9bb6CAF862C920FAc43aC1";
+	const contractABI = [{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"uint32","name":"size","type":"uint32"}],"name":"create","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint32","name":"index","type":"uint32"}],"name":"getImageChunk","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageChunks","outputs":[{"internalType":"string[]","name":"","type":"string[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageName","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getImageUploader","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"images","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"address","name":"uploader","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint32","name":"index","type":"uint32"},{"internalType":"string","name":"data","type":"string"}],"name":"uploadChunk","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"uploadID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
 
 	let base64 = [];
 
@@ -26,25 +26,23 @@
 		});
 
 		let image = (await getImage(0));
-		let reverseImage = [...image];
-		reverseImage.reverse();
-		console.log(reverseImage.join(""));
+		console.log(image.join(""));
 
 		var imageEle = new Image();
-		imageEle.src = 'data:image/png;base64,' + reverseImage.join("");
+		imageEle.src = 'data:image/png;base64,' + image.join("");
 		document.body.appendChild(imageEle);
 	}
 
-	const batchTransactions = async (name = "testImage2") => {
+	const batchTransactions = async (name = "cTH logo") => {
 		let base64String = await getBase64Image(document.getElementById("uploadedImg"));
 		let base64 = await base64String.match(/.{1,9216}/g);
 		console.log(base64[0]);
 
 		let contract = new $web3.eth.Contract(contractABI, contractAddress, { from: $selectedAccount });
 
-		contract.methods.create(name).send({
+		contract.methods.create(name, base64.length).send({
 			gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
-			gasLimit: $web3.utils.toHex(115000),
+			gasLimit: $web3.utils.toHex(155000),
 			from: $selectedAccount,
 			to: contractAddress,
 			value: $web3.utils.toHex($web3.utils.toWei('10', 'finney'))
@@ -53,7 +51,7 @@
 		await sleep(600);
 
 		for(let i = 0; i < base64.length; i++) {
-			contract.methods.uploadChunk(1, base64[i]).send({
+			contract.methods.uploadChunk(0, i, base64[i]).send({
 				gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
 				gasLimit: $web3.utils.toHex(5994383),
 				from: $selectedAccount,
@@ -62,15 +60,6 @@
 
 			await sleep(350);
 		}
-
-		/*var batch = new $web3.BatchRequest();
-		batch.add(contract.methods.create(name));
-		
-		for(let i = 0; i < base64.length; i++) {
-			batch.add(contract.methods.uploadChunk(0, base64[i]));
-		}
-
-		batch.execute();*/
 	}
 
 	const getImage = async(id) => {
