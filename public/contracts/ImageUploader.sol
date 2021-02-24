@@ -28,8 +28,8 @@ contract ImageUpload {
         uploadID += 1;
     }
     
-    function uploadChunk(uint256 id, string memory data) public {
-        images[id].data.push(data);
+    function uploadChunk(uint256 id, uint32 index, string memory data) public {
+        images[id].data[index] = data;
     }
     
     function getImageName(uint256 id) public view returns(string memory) {
@@ -42,6 +42,10 @@ contract ImageUpload {
     
     function getImageChunks(uint256 id) public view returns(string[] memory) {
         return images[id].data;
+    }
+    
+    function getImageChunk(uint256 id, uint32 index) public view returns(string memory) {
+        return images[id].data[index];
     }
     
 }
