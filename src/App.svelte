@@ -25,12 +25,15 @@
 			console.log("New Block");
 		});
 
-		let image = (await getImage(0));
+		let image = (await getImage(1));
 		console.log(image.join(""));
 
 		var imageEle = new Image();
-		imageEle.src = 'data:image/png;base64,' + image.join("");
+		imageEle.src = 'data:image/jpg;base64,' + image.join("");
 		document.body.appendChild(imageEle);
+
+		let base64String = await getBase64Image(document.getElementById("uploadedImg"));
+		console.log(base64String);
 	}
 
 	const batchTransactions = async (name = "cTH logo") => {
@@ -42,7 +45,7 @@
 
 		contract.methods.create(name, base64.length).send({
 			gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
-			gasLimit: $web3.utils.toHex(155000),
+			gasLimit: $web3.utils.toHex(255000),
 			from: $selectedAccount,
 			to: contractAddress,
 			value: $web3.utils.toHex($web3.utils.toWei('10', 'finney'))
@@ -51,7 +54,7 @@
 		await sleep(600);
 
 		for(let i = 0; i < base64.length; i++) {
-			contract.methods.uploadChunk(0, i, base64[i]).send({
+			contract.methods.uploadChunk(1, i, base64[i]).send({
 				gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
 				gasLimit: $web3.utils.toHex(5994383),
 				from: $selectedAccount,
@@ -75,7 +78,7 @@
 		canvas.height = img.height;
 		var ctx = canvas.getContext("2d");
 		ctx.drawImage(img, 0, 0);
-		var dataURL = canvas.toDataURL("image/png");
+		var dataURL = canvas.toDataURL("image/jpg");
 		return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
 	}
 
@@ -92,11 +95,11 @@
 <p>
 	this is extremely experimental. what you're about to do is upload an <br />
 	image to the cheapEth blockchain. the image you select is broken up into chunks <br />
-	and then pushed in individual transactions, this is to avoid the block gas limit (12,000,000) <br />
-	which only allows us to push ~10kb at a time.
+	and then pushed in individual transactions, this is to avoid the block gas limit (8,000,000) <br />
+	each transaction will contain roughly 10kb (5994383 gas) and use up 75% of the block space <br />
 </p>
 
 <button on:click={enableBrowser}>connect</button>
 <button on:click={batchTransactions}>upload</button>
 
-<img crossorigin="anonymous" id="uploadedImg" src="https://cheapeth.org/images/logo.png" alt="">
+<img crossorigin="anonymous" id="uploadedImg" src="https://pbs.twimg.com/profile_images/772342671721455616/FE79-7Ev.jpg" alt="">
