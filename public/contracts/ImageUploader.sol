@@ -11,6 +11,7 @@ contract ImageUpload {
     uint256 public uploadID = 0;
 
     mapping(uint256 => Image) public images;
+    mapping(address => uint256[]) public users;
     
     function create(string memory name, uint32 size) public payable {
         // Set cost to upload
@@ -25,11 +26,14 @@ contract ImageUpload {
         // Map the imageID to the image
         images[uploadID] = image;
         
+        users[msg.sender].push(uploadID);
+        
         // Increment the upload ID
         uploadID += 1;
     }
     
     function uploadChunk(uint256 id, uint32 index, string memory data) public {
+        require(msg.sender == images[id].uploader);
         images[id].data[index] = data;
     }
     
@@ -47,6 +51,10 @@ contract ImageUpload {
     
     function getImageChunk(uint256 id, uint32 index) public view returns(string memory) {
         return images[id].data[index];
+    }
+    
+    function getImageIDsByAddress(address user) public view returns(uint256[] memory) {
+        return users[user];
     }
     
 }
