@@ -10,9 +10,9 @@
 	let base64 = [];
 
 	onMount(async () => {
-		/*let base64String = await getBase64Image(document.getElementById("uploadedImg"));
-		let base64 = base64String.match(/.{1,8192}/g);
-		console.log(base64String);*/
+		let base64String = await getBase64Image(document.getElementById("uploadedImg"));
+		//let base64 = base64String.match(/.{1,8192}/g);
+		console.log(base64String);
 	});
 
 	const enableBrowser = async () => {
@@ -25,7 +25,7 @@
 			console.log("New Block");
 		});
 
-		let image = (await getImage(1));
+		let image = (await getImage(2));
 		console.log(image.join(""));
 
 		var imageEle = new Image();
@@ -43,26 +43,31 @@
 
 		let contract = new $web3.eth.Contract(contractABI, contractAddress, { from: $selectedAccount });
 
-		contract.methods.create(name, base64.length).send({
-			gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
-			gasLimit: $web3.utils.toHex(255000),
-			from: $selectedAccount,
-			to: contractAddress,
-			value: $web3.utils.toHex($web3.utils.toWei('10', 'finney'))
-		});
-
-		await sleep(600);
-
-		for(let i = 0; i < base64.length; i++) {
-			contract.methods.uploadChunk(1, i, base64[i]).send({
+		return new Promise((resolve, reject) => {
+			contract.methods.create(name, base64.length).send({
 				gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
-				gasLimit: $web3.utils.toHex(5994383),
+				gasLimit: $web3.utils.toHex(255000),
 				from: $selectedAccount,
-				to: contractAddress
-			});
+				to: contractAddress,
+				value: $web3.utils.toHex($web3.utils.toWei('10', 'finney'))
+			}).on('confirmation', async (confirmationNumber) => {
+				if(confirmationNumber === 0) {
+					// create confirmed, now upload the chunks
+					for(let i = 0; i < base64.length; i++) {
+						contract.methods.uploadChunk(2, i, base64[i]).send({
+							gasPrice: $web3.utils.toHex($web3.utils.toWei('1', 'gwei')),
+							gasLimit: $web3.utils.toHex(5994383), // gas gas gas
+							from: $selectedAccount,
+							to: contractAddress
+						});
 
-			await sleep(350);
-		}
+						await sleep(350);
+					}
+				}
+			}).on('error', (error) => {
+				console.log("The transaction failed!");
+			});
+		});
 	}
 
 	const getImage = async(id) => {
@@ -102,4 +107,9 @@
 <button on:click={enableBrowser}>connect</button>
 <button on:click={batchTransactions}>upload</button>
 
-<img crossorigin="anonymous" id="uploadedImg" src="https://pbs.twimg.com/profile_images/772342671721455616/FE79-7Ev.jpg" alt="">
+<br />
+
+<strong>image to upload</strong>
+<img crossorigin="anonymous" id="uploadedImg" src="https://miro.medium.com/max/920/1*fMTAEGKA9MruarTvD5_uSg.png" alt="">
+
+<strong>images from blockchain</strong>
